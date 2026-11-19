@@ -1,0 +1,895 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Snake Game</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #17243a, #080d18 65%);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px 15px;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 650px;
+    text-align: center;
+}
+
+.header {
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 6vw, 42px);
+    color: #5cff9d;
+    text-shadow: 0 0 20px #00ff8870;
+    letter-spacing: 4px;
+}
+
+.header p {
+    color: #8b9bb4;
+    margin-top: 10px;
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.score-card {
+    background: #141f31;
+    border: 1px solid #26384e;
+    border-radius: 12px;
+    padding: 14px 5px;
+}
+
+.score-card span {
+    display: block;
+    color: #8192a9;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.score-card strong {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    color: #5cff9d;
+}
+
+.game-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #080f1b;
+    border: 2px solid #2a4354;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 0 30px #00ff8815,
+                inset 0 0 30px #00ff8808;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 12, 23, 0.91);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.overlay h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #5cff9d;
+    font-size: clamp(22px, 5vw, 34px);
+    margin-bottom: 15px;
+}
+
+.overlay p {
+    color: #a6b4c8;
+    margin-bottom: 22px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.hidden {
+    display: none !important;
+}
+
+button, select {
+    font-family: 'Inter', sans-serif;
+    outline: none;
+}
+
+.btn {
+    background: #5cff9d;
+    color: #06130c;
+    border: none;
+    padding: 13px 28px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #a0ffc3;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px #5cff9d55;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+}
+
+.secondary-btn {
+    background: #17263a;
+    color: #dce9f8;
+    border: 1px solid #30465e;
+    padding: 11px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.secondary-btn:hover {
+    border-color: #5cff9d;
+    color: #5cff9d;
+}
+
+select {
+    background: #17263a;
+    color: white;
+    border: 1px solid #30465e;
+    padding: 11px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.keyboard-info {
+    background: #111d2d;
+    border: 1px solid #26384e;
+    border-radius: 12px;
+    padding: 17px;
+    margin-top: 18px;
+}
+
+.keyboard-info p {
+    font-size: 12px;
+    color: #91a1b8;
+    margin-bottom: 12px;
+}
+
+.keys {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.key {
+    background: #26364c;
+    border: 1px solid #405570;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    color: #5cff9d;
+}
+
+.footer {
+    color: #60738b;
+    font-size: 11px;
+    margin-top: 20px;
+}
+
+@media(max-width: 480px) {
+    .score-card strong {
+        font-size: 17px;
+    }
+
+    .score-card {
+        padding: 12px 3px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-container">
+
+    <div class="header">
+        <h1>NEON SNAKE</h1>
+        <p>ARCADE CLASSIC REIMAGINED</p>
+    </div>
+
+    <div class="score-board">
+        <div class="score-card">
+            <span>SCORE</span>
+            <strong id="score">0</strong>
+        </div>
+
+        <div class="score-card">
+            <span>HIGH SCORE</span>
+            <strong id="highScore">0</strong>
+        </div>
+
+        <div class="score-card">
+            <span>SPEED</span>
+            <strong id="speed">1x</strong>
+        </div>
+    </div>
+
+    <div class="game-wrapper">
+
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+        <div class="overlay" id="startOverlay">
+            <h2>READY TO PLAY?</h2>
+            <p>Eat the food. Grow your snake.<br>Avoid the walls and yourself.</p>
+            <button class="btn" id="startBtn">START GAME</button>
+        </div>
+
+        <div class="overlay hidden" id="pauseOverlay">
+            <h2>GAME PAUSED</h2>
+            <p>Take a break. Your snake is waiting.</p>
+            <button class="btn" id="resumeBtn">RESUME GAME</button>
+        </div>
+
+        <div class="overlay hidden" id="gameOverOverlay">
+            <h2>GAME OVER!</h2>
+            <p id="finalScore">Your score: 0</p>
+            <button class="btn" id="restartBtn">PLAY AGAIN</button>
+        </div>
+
+    </div>
+
+    <div class="controls">
+
+        <select id="difficulty">
+            <option value="180">Easy Mode</option>
+            <option value="120" selected>Medium Mode</option>
+            <option value="70">Hard Mode</option>
+        </select>
+
+        <button class="secondary-btn" id="pauseBtn">⏸ Pause</button>
+
+        <button class="secondary-btn" id="soundBtn">🔊 Sound On</button>
+
+        <button class="secondary-btn" id="resetBtn">↻ Restart</button>
+
+    </div>
+
+    <div class="keyboard-info">
+        <p>USE YOUR LAPTOP ARROW KEYS TO CONTROL THE SNAKE</p>
+
+        <div class="keys">
+            <span class="key">↑ UP</span>
+            <span class="key">↓ DOWN</span>
+            <span class="key">← LEFT</span>
+            <span class="key">→ RIGHT</span>
+            <span class="key">SPACE = PAUSE</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        NEON SNAKE GAME | BUILT WITH HTML, CSS & JAVASCRIPT
+    </div>
+
+</div>
+
+<script>
+
+// ==========================================
+// 1. INITIALIZATION
+// ==========================================
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const GRID = 20;
+const CELL = canvas.width / GRID;
+
+const scoreElement = document.getElementById("score");
+const highScoreElement = document.getElementById("highScore");
+const speedElement = document.getElementById("speed");
+
+const startOverlay = document.getElementById("startOverlay");
+const pauseOverlay = document.getElementById("pauseOverlay");
+const gameOverOverlay = document.getElementById("gameOverOverlay");
+
+let snake;
+let food;
+let direction;
+let nextDirection;
+
+let score = 0;
+let highScore = Number(localStorage.getItem("snakeHighScore")) || 0;
+
+let gameState = "READY";
+let soundEnabled = true;
+
+let baseSpeed = 120;
+let currentSpeed = baseSpeed;
+let lastTime = 0;
+let accumulator = 0;
+
+highScoreElement.textContent = highScore;
+
+
+// ==========================================
+// 2. GAME INITIALIZATION
+// ==========================================
+
+function initializeGame() {
+
+    snake = [
+        {x: 10, y: 10},
+        {x: 9, y: 10},
+        {x: 8, y: 10}
+    ];
+
+    direction = {x: 1, y: 0};
+    nextDirection = {x: 1, y: 0};
+
+    score = 0;
+    accumulator = 0;
+    currentSpeed = Number(document.getElementById("difficulty").value);
+
+    scoreElement.textContent = score;
+    speedElement.textContent = "1x";
+
+    generateFood();
+    drawGame();
+}
+
+
+// ==========================================
+// 3. FOOD GENERATION
+// ==========================================
+
+function generateFood() {
+
+    let validPosition = false;
+
+    while (!validPosition) {
+
+        food = {
+            x: Math.floor(Math.random() * GRID),
+            y: Math.floor(Math.random() * GRID)
+        };
+
+        validPosition = !snake.some(segment =>
+            segment.x === food.x &&
+            segment.y === food.y
+        );
+    }
+}
+
+
+// ==========================================
+// 4. DRAW GAME BOARD
+// ==========================================
+
+function drawGame() {
+
+    // Clear canvas
+    ctx.fillStyle = "#080f1b";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw grid
+    ctx.strokeStyle = "#17263a";
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= GRID; i++) {
+
+        ctx.beginPath();
+        ctx.moveTo(i * CELL, 0);
+        ctx.lineTo(i * CELL, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * CELL);
+        ctx.lineTo(canvas.width, i * CELL);
+        ctx.stroke();
+    }
+
+    // Draw food
+    drawFood();
+
+    // Draw snake
+    snake.forEach((segment, index) => {
+
+        const padding = 2;
+
+        ctx.fillStyle = index === 0 ? "#a0ffc3" : "#39e981";
+
+        ctx.shadowColor = "#39e981";
+        ctx.shadowBlur = index === 0 ? 18 : 9;
+
+        ctx.beginPath();
+
+        ctx.roundRect(
+            segment.x * CELL + padding,
+            segment.y * CELL + padding,
+            CELL - padding * 2,
+            CELL - padding * 2,
+            5
+        );
+
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        // Snake eyes
+        if (index === 0) {
+
+            ctx.fillStyle = "#07150d";
+
+            let eye1, eye2;
+
+            if (direction.x === 1) {
+                eye1 = [15, 5];
+                eye2 = [15, 13];
+            }
+            else if (direction.x === -1) {
+                eye1 = [5, 5];
+                eye2 = [5, 13];
+            }
+            else if (direction.y === -1) {
+                eye1 = [5, 5];
+                eye2 = [13, 5];
+            }
+            else {
+                eye1 = [5, 15];
+                eye2 = [13, 15];
+            }
+
+            ctx.fillRect(segment.x * CELL + eye1[0],
+                         segment.y * CELL + eye1[1], 3, 3);
+
+            ctx.fillRect(segment.x * CELL + eye2[0],
+                         segment.y * CELL + eye2[1], 3, 3);
+        }
+    });
+}
+
+
+// ==========================================
+// 5. DRAW FOOD
+// ==========================================
+
+function drawFood() {
+
+    const centerX = food.x * CELL + CELL / 2;
+    const centerY = food.y * CELL + CELL / 2;
+
+    ctx.shadowColor = "#ff4444";
+    ctx.shadowBlur = 22;
+
+    ctx.fillStyle = "#ff5252";
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+}
+
+
+// ==========================================
+// 6. MOVE SNAKE
+// ==========================================
+
+function moveSnake() {
+
+    direction = nextDirection;
+
+    const head = {
+        x: snake[0].x + direction.x,
+        y: snake[0].y + direction.y
+    };
+
+    // Check wall collision
+    if (
+        head.x < 0 ||
+        head.x >= GRID ||
+        head.y < 0 ||
+        head.y >= GRID
+    ) {
+        endGame();
+        return;
+    }
+
+    const eating = (
+        head.x === food.x &&
+        head.y === food.y
+    );
+
+    // Check body collision.
+    // The last segment moves away if the snake is not eating.
+    const bodyToCheck = eating ? snake : snake.slice(0, -1);
+
+    const collision = bodyToCheck.some(segment =>
+        segment.x === head.x &&
+        segment.y === head.y
+    );
+
+    if (collision) {
+        endGame();
+        return;
+    }
+
+    // Add new head
+    snake.unshift(head);
+
+    if (eating) {
+
+        score += 10;
+
+        scoreElement.textContent = score;
+
+        playSound(650, 0.1);
+
+        // Save high score
+        if (score > highScore) {
+
+            highScore = score;
+
+            localStorage.setItem("snakeHighScore", highScore);
+
+            highScoreElement.textContent = highScore;
+        }
+
+        // Increase speed every 50 points
+        const level = Math.floor(score / 50);
+
+        currentSpeed = Math.max(45, baseSpeed - level * 12);
+
+        speedElement.textContent = (1 + level) + "x";
+
+        generateFood();
+
+    } else {
+
+        // Remove tail when not eating
+        snake.pop();
+    }
+
+    drawGame();
+}
+
+
+// ==========================================
+// 7. GAME LOOP
+// ==========================================
+
+function gameLoop(timestamp) {
+
+    if (gameState !== "PLAYING") return;
+
+    if (!lastTime) lastTime = timestamp;
+
+    const delta = Math.min(timestamp - lastTime, 100);
+
+    lastTime = timestamp;
+    accumulator += delta;
+
+    if (accumulator >= currentSpeed) {
+
+        moveSnake();
+
+        accumulator = 0;
+    }
+
+    if (gameState === "PLAYING") {
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+
+// ==========================================
+// 8. KEYBOARD CONTROLS
+// ==========================================
+
+document.addEventListener("keydown", function(event) {
+
+    const key = event.key;
+
+    const arrowKeys = [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+    ];
+
+    // Prevent browser scrolling with arrow keys
+    if (arrowKeys.includes(key) || key === " ") {
+        event.preventDefault();
+    }
+
+    // Start or restart with Enter
+    if (key === "Enter") {
+
+        if (gameState === "READY" || gameState === "GAME_OVER") {
+            startGame();
+        }
+
+        return;
+    }
+
+    // Pause / Resume with Space
+    if (key === " ") {
+
+        if (gameState === "PLAYING") {
+            pauseGame();
+        }
+        else if (gameState === "PAUSED") {
+            resumeGame();
+        }
+
+        return;
+    }
+
+    if (gameState !== "PLAYING") return;
+
+    // Direction controls
+    switch (key) {
+
+        case "ArrowUp":
+
+            if (direction.y !== 1) {
+                nextDirection = {x: 0, y: -1};
+            }
+
+            break;
+
+        case "ArrowDown":
+
+            if (direction.y !== -1) {
+                nextDirection = {x: 0, y: 1};
+            }
+
+            break;
+
+        case "ArrowLeft":
+
+            if (direction.x !== 1) {
+                nextDirection = {x: -1, y: 0};
+            }
+
+            break;
+
+        case "ArrowRight":
+
+            if (direction.x !== -1) {
+                nextDirection = {x: 1, y: 0};
+            }
+
+            break;
+    }
+
+});
+
+
+// ==========================================
+// 9. START GAME
+// ==========================================
+
+function startGame() {
+
+    initializeGame();
+
+    gameState = "PLAYING";
+
+    startOverlay.classList.add("hidden");
+    pauseOverlay.classList.add("hidden");
+    gameOverOverlay.classList.add("hidden");
+
+    lastTime = 0;
+    accumulator = 0;
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+// ==========================================
+// 10. PAUSE GAME
+// ==========================================
+
+function pauseGame() {
+
+    if (gameState !== "PLAYING") return;
+
+    gameState = "PAUSED";
+
+    pauseOverlay.classList.remove("hidden");
+
+    document.getElementById("pauseBtn").textContent = "▶ Resume";
+}
+
+
+// ==========================================
+// 11. RESUME GAME
+// ==========================================
+
+function resumeGame() {
+
+    if (gameState !== "PAUSED") return;
+
+    gameState = "PLAYING";
+
+    pauseOverlay.classList.add("hidden");
+
+    document.getElementById("pauseBtn").textContent = "⏸ Pause";
+
+    lastTime = 0;
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+// ==========================================
+// 12. GAME OVER
+// ==========================================
+
+function endGame() {
+
+    gameState = "GAME_OVER";
+
+    playSound(180, 0.3);
+
+    document.getElementById("finalScore").textContent =
+        "Your score: " + score + " | High score: " + highScore;
+
+    gameOverOverlay.classList.remove("hidden");
+}
+
+
+// ==========================================
+// 13. SOUND EFFECTS
+// ==========================================
+
+function playSound(frequency, duration) {
+
+    if (!soundEnabled) return;
+
+    try {
+
+        const audioContext = new (
+            window.AudioContext || window.webkitAudioContext
+        )();
+
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = "sine";
+
+        gain.gain.setValueAtTime(0.12, audioContext.currentTime);
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + duration
+        );
+
+        oscillator.start();
+
+        oscillator.stop(audioContext.currentTime + duration);
+
+        oscillator.onended = () => audioContext.close();
+
+    } catch (error) {
+        console.log("Audio unavailable");
+    }
+}
+
+
+// ==========================================
+// 14. BUTTON EVENTS
+// ==========================================
+
+document.getElementById("startBtn").addEventListener("click", startGame);
+
+document.getElementById("restartBtn").addEventListener("click", startGame);
+
+document.getElementById("resetBtn").addEventListener("click", startGame);
+
+document.getElementById("resumeBtn").addEventListener("click", resumeGame);
+
+document.getElementById("pauseBtn").addEventListener("click", function() {
+
+    if (gameState === "PLAYING") {
+        pauseGame();
+    }
+    else if (gameState === "PAUSED") {
+        resumeGame();
+    }
+
+});
+
+
+// ==========================================
+// 15. SOUND TOGGLE
+// ==========================================
+
+document.getElementById("soundBtn").addEventListener("click", function() {
+
+    soundEnabled = !soundEnabled;
+
+    this.textContent = soundEnabled ? "🔊 Sound On" : "🔇 Sound Off";
+
+});
+
+
+// ==========================================
+// 16. DIFFICULTY CHANGE
+// ==========================================
+
+document.getElementById("difficulty").addEventListener("change", function() {
+
+    baseSpeed = Number(this.value);
+
+    if (gameState === "PLAYING" || gameState === "PAUSED") {
+
+        const level = Math.floor(score / 50);
+
+        currentSpeed = Math.max(45, baseSpeed - level * 12);
+    }
+
+});
+
+
+// ==========================================
+// 17. INITIAL SCREEN
+// ==========================================
+
+initializeGame();
+
+gameState = "READY";
+
+</script>
+
+</body>
+</html>
